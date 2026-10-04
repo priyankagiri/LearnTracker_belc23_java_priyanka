@@ -1,11 +1,17 @@
 package com.airtribe.learntrack.entity;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+
+import com.airtribe.learntrack.exception.InvalidInputException;
+import com.airtribe.learntrack.util.IdGenerator;
+
 public class Enrollment {
     private int id;
     private int studentId;
     private int courseId;
     private String enrollmentDate;
-    private Enum<EnrollmentStatus> status;
+    private EnrollmentStatus status;
 
     /**
      * Default constructor
@@ -16,11 +22,18 @@ public class Enrollment {
 	/** 
      * Parameterized constructor
      */
-    public Enrollment(int id, int studentId, int courseId, String enrollmentDate, Enum<EnrollmentStatus> status) {
+    public Enrollment(int studentId, int courseId, String enrollmentDate, EnrollmentStatus status) {
+        this(IdGenerator.getNextEnrollmentId(), studentId, courseId, enrollmentDate, status);
+    }
+
+	/** 
+     * Parameterized constructor
+     */
+    public Enrollment(int id, int studentId, int courseId, String enrollmentDate, EnrollmentStatus status) {
         this.id = id;
-        this.studentId = studentId;
-        this.courseId = courseId;
-        this.enrollmentDate = enrollmentDate;
+        setStudentId(studentId);
+        setCourseId(courseId);
+        setEnrollmentDate(enrollmentDate);
         this.status = status;
     }
 
@@ -38,24 +51,38 @@ public class Enrollment {
 		return studentId;
 	}
 	public void setStudentId(int studentId) {
+        if (studentId <= 0) {
+            throw new InvalidInputException("Student ID must be greater than zero");
+        }
 		this.studentId = studentId;
 	}
 	public int getCourseId() {
 		return courseId;
 	}
 	public void setCourseId(int courseId) {
+        if (courseId <= 0) {
+            throw new InvalidInputException("Course ID must be greater than zero");
+        }
 		this.courseId = courseId;
 	}
 	public String getEnrollmentDate() {
 		return enrollmentDate;
 	}
 	public void setEnrollmentDate(String enrollmentDate) {
-		this.enrollmentDate = enrollmentDate;
+        if (enrollmentDate == null || enrollmentDate.trim().isEmpty()) {
+            throw new InvalidInputException("Enrollment date cannot be null or empty");
+        }
+        try {
+            this.enrollmentDate = LocalDate.parse(enrollmentDate.trim()).toString();
+        } catch (DateTimeParseException exception) {
+            throw new InvalidInputException(
+                    "Enrollment date must use the format yyyy-MM-dd");
+        }
 	}
-	public Enum<EnrollmentStatus> getStatus() {
+	public EnrollmentStatus getStatus() {
 		return status;
 	}
-	public void setStatus(Enum<EnrollmentStatus> status) {
+	public void setStatus(EnrollmentStatus status) {
 		this.status = status;
 	}
 

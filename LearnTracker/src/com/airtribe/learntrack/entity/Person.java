@@ -6,9 +6,6 @@ public class Person {
     private String lastName;
     private String email;
 
-    public Person() {
-    }
-
     public Person(int id, String firstName, String lastName, String email) {
         this.id = id;
         this.firstName = firstName;

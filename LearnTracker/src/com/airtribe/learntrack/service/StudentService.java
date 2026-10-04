@@ -2,57 +2,67 @@ package com.airtribe.learntrack.service;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import com.airtribe.learntrack.entity.Student;
 import com.airtribe.learntrack.exception.InvalidInputException;
 import com.airtribe.learntrack.exception.EntityNotFoundException;
-import com.airtribe.learntrack.util.IdGenerator;
 
 public class StudentService {
 
     private final List<Student> students = new ArrayList<>();
 
-    // part of overloaded method to update student details - not added in main menu
-    public Student addStudent(String name) {
-        return addStudent(name, "", "", "");
-    }
-
     public Student addStudent(String firstName, String lastName, String email, String batch) {
-        int studentId = IdGenerator.getNextStudentId();
+        validateRequiredText(firstName, "First name");
+        validateRequiredText(lastName, "Last name");
+        validateRequiredText(email, "Email");
+        validateRequiredText(batch, "Batch");
 
-        if (firstName == null || firstName.isEmpty()) {
-            throw new InvalidInputException("First name cannot be null or empty");
-        }
-        if (lastName == null || lastName.isEmpty()) {
-            throw new InvalidInputException("Last name cannot be null or empty");
-        }
-        if (email == null || email.isEmpty()) {
-            throw new InvalidInputException("Email cannot be null or empty");
-        }
-        if (batch == null || batch.isEmpty()) {
-            throw new InvalidInputException("Batch cannot be null or empty");
-        }
-
-        Student student = new Student(studentId, firstName, lastName, email, batch, true);
+        Student student = new Student(firstName, lastName, email, batch, true);
         students.add(student);
         return student;
     }
 
-    // part of overloaded method to update student details - not added in main menu
-    public void addStudent(String name, int age) {
-        addStudent(name);
+    public Student addStudent(String firstName, String lastName, String batch) {
+        validateRequiredText(firstName, "First name");
+        validateRequiredText(lastName, "Last name");
+        validateRequiredText(batch, "Batch");
+
+        Student student = new Student(firstName, lastName, batch, true);
+        students.add(student);
+        return student;
     }
 
-    // Remove a student by ID- not
+    private void validateRequiredText(String value, String fieldName) {
+        if (value == null || value.trim().isEmpty()) {
+            throw new InvalidInputException(fieldName + " cannot be null or empty");
+        }
+    }
+
+    // Deactivate a student without deleting enrollment references
     public void removeStudent(int studentId) {
-        students.removeIf(student -> student.getId() == studentId);
-    }
-
-    // update student details by id and name
-    public void updateStudent(int studentId, String newName) {
         for (Student student : students) {
             if (student.getId() == studentId) {
-                student.setFirstName(newName);
+                student.setActive(false);
+                return;
+            }
+        }
+        throw new EntityNotFoundException(
+                "Student not found with ID: " + studentId);
+    }
+
+    // Update all student details together to keep the entity consistent.
+    public void updateStudent(int studentId, String firstName, String lastName,
+            String email, String batch) {
+        validateRequiredText(firstName, "First name");
+        validateRequiredText(lastName, "Last name");
+        validateRequiredText(email, "Email");
+        validateRequiredText(batch, "Batch");
+
+        for (Student student : students) {
+            if (student.getId() == studentId) {
+                student.setFirstName(firstName);
+                student.setLastName(lastName);
+                student.setEmail(email);
+                student.setBatch(batch);
                 return;
             }
         }
@@ -61,31 +71,52 @@ public class StudentService {
                 "Student not found with ID: " + studentId);
     }
 
-    // part of overloaded method to update student details - not added in main menu
-    public void updateStudent(int studentId, String newName, int newAge) {
-        updateStudent(studentId, newName);
+    public void updateStudent(int studentId, String firstName, String lastName, String batch) {
+        validateRequiredText(firstName, "First name");
+        validateRequiredText(lastName, "Last name");
+        validateRequiredText(batch, "Batch");
+
+        for (Student student : students) {
+            if (student.getId() == studentId) {
+                student.setFirstName(firstName);
+                student.setLastName(lastName);
+                student.setEmail("");
+                student.setBatch(batch);
+                return;
+            }
+        }
+
+        throw new EntityNotFoundException(
+                "Student not found with ID: " + studentId);
     }
 
     // view all students
-    public void listStudents() {
-        for (Student student : students) {
-            displayStudentDetails(student);
-        }
+    public List<Student> listStudents() {
+        return new ArrayList<>(students);
     }
 
     // Search student by ID
-    public void findStudentById(int studentId) {
+    public Student findStudentById(int studentId) {
         for (Student student : students) {
             if (student.getId() == studentId) {
-                displayStudentDetails(student);
-                return;
-
+                return student;
             }
         }
+        throw new EntityNotFoundException(
+                "Student not found with ID: " + studentId);
     }
 
 
     public boolean studentExists(int studentId) {
+        for (Student student : students) {
+            if (student.getId() == studentId && student.isActive()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean studentExistsById(int studentId) {
         for (Student student : students) {
             if (student.getId() == studentId) {
                 return true;
@@ -106,14 +137,4 @@ public class StudentService {
                 "Student not found with ID: " + studentId);
     }
 
-    private void displayStudentDetails(Student student) {
-        System.out.println("============================================");
-        System.out.println("ID: " + student.getId());
-        System.out.println("First Name: " + student.getFirstName());
-        System.out.println("Last Name: " + student.getLastName());
-        System.out.println("Email: " + student.getEmail());
-        System.out.println("Batch: " + student.getBatch());
-        System.out.println("Active: " + student.isActive());
-        System.out.println("============================================");
-    }
 }

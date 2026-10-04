@@ -33,6 +33,14 @@ public class EnrollmentService {
         if (!courseService.courseExists(courseId)) {
             throw new InvalidInputException("Course not found with ID: " + courseId);
         }
+        for (Enrollment enrollment : enrollments) {
+            if (enrollment.getStudentId() == studentId
+                    && enrollment.getCourseId() == courseId
+                    && enrollment.getStatus() == EnrollmentStatus.ACTIVE) {
+                throw new InvalidInputException(
+                        "Student is already actively enrolled in this course");
+            }
+        }
 
         Enrollment enrollment = new Enrollment(
                 IdGenerator.getNextEnrollmentId(),
@@ -45,49 +53,41 @@ public class EnrollmentService {
     }
 
     // View enrollments for a student
-    public void viewEnrollmentsForStudent(int studentId) {
+    public List<Enrollment> viewEnrollmentsForStudent(int studentId) {
         if (studentId <= 0) {
             throw new InvalidInputException("Student ID must be greater than zero");
         }
+        if (!studentService.studentExistsById(studentId)) {
+            throw new EntityNotFoundException("Student not found with ID: " + studentId);
+        }
 
-        boolean found = false;
+        List<Enrollment> studentEnrollments = new ArrayList<>();
         for (Enrollment enrollment : enrollments) {
             if (enrollment.getStudentId() == studentId) {
-                found = true;
-                System.out.println(
-                        "Enrollment ID: " + enrollment.getId()
-                                + ", Course ID: " + enrollment.getCourseId()
-                                + ", Date: " + enrollment.getEnrollmentDate()
-                                + ", Status: " + enrollment.getStatus());
+                studentEnrollments.add(enrollment);
             }
         }
 
-        if (!found) {
+        if (studentEnrollments.isEmpty()) {
             throw new EntityNotFoundException(
                     "No enrollments found for student with ID: " + studentId);
         }
+        return studentEnrollments;
     }
 
     // Mark enrollment as completed/cancelled
-    public void updateEnrollmentStatus(int enrollmentId, String status) {
+    public void updateEnrollmentStatus(int enrollmentId, EnrollmentStatus status) {
         if (enrollmentId <= 0) {
             throw new InvalidInputException("Enrollment ID must be greater than zero");
         }
-        if (status == null || status.trim().isEmpty()) {
+        if (status == null) {
             throw new InvalidInputException("Status cannot be null or empty");
         }
 
         for (Enrollment enrollment : enrollments) {
             if (enrollment.getId() == enrollmentId) {
-                try {
-                    EnrollmentStatus newStatus = EnrollmentStatus.valueOf(status.trim().toUpperCase());
-
-                    enrollment.setStatus(newStatus);
-                    return;
-                } catch (IllegalArgumentException exception) {
-                    throw new InvalidInputException(
-                            "Status must be ACTIVE, COMPLETED, or CANCELLED");
-                }
+                enrollment.setStatus(status);
+                return;
             }
         }
 

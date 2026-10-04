@@ -1,23 +1,16 @@
 package com.airtribe.learntrack.entity;
 
+import com.airtribe.learntrack.exception.InvalidInputException;
+
 public class Trainer extends Person {
     private String specialization;
     private int yearsOfExperience;
     
-    public Trainer() {
-    }
-
-    public Trainer(String specialization, int yearsOfExperience) {
-        super();
-        this.specialization = specialization;
-        this.yearsOfExperience = yearsOfExperience;
-    }
-
     public Trainer(int id, String firstName, String lastName, String email,
                    String specialization, int yearsOfExperience) {
         super(id, firstName, lastName, email);
         this.specialization = specialization;
-        this.yearsOfExperience = yearsOfExperience;
+        setYearsOfExperience(yearsOfExperience);
     }
 
     @Override
@@ -38,8 +31,10 @@ public class Trainer extends Person {
     }
 
     public void setYearsOfExperience(int yearsOfExperience) {
+        if (yearsOfExperience < 0) {
+            throw new InvalidInputException("Years of experience cannot be negative");
+        }
         this.yearsOfExperience = yearsOfExperience;
     }
         
 }
-
